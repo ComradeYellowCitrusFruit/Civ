@@ -106,7 +106,7 @@ struct gridSquare
     // Population of the square
     unsigned int population;
     // Tile height, used to generate some things.
-    double height.
+    double height;
 };
 
 /*  Rendered form of the grid, the COMPLETE GRID

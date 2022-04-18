@@ -2,8 +2,10 @@
 #include <thread>
 #include <mutex>
 #include <sstream>
+#include <vector>
 #include "grid.hpp"
 #include "civ_typedefs.hpp"
+#include "checks.hpp"
 #include "perlin.hpp"
 #include "random.hpp"
 
@@ -74,27 +76,32 @@ class Grid
             case SUPER_SMALL:
                 oceanCount = randInRange(SUPER_SMALL_OCEANS_MAX, SUPER_SMALL_OCEANS_MIN);
                 oceanRatio = randInRange(SUPER_SMALL_OCEANS_RATIO_MAX, SUPER_SMALL_OCEANS_RATIO_MIN);
-                oceanRadiusGen = { SUPER_SMALL_OCEANS_RADIUS_MAX, SUPER_SMALL_OCEANS_RADIUS_MIN };
+                oceanRadiusGen[0] = SUPER_SMALL_OCEANS_RADIUS_MAX;
+                oceanRadiusGen[1] = SUPER_SMALL_OCEANS_RADIUS_MIN;
                 break;
             case SMALL:
                 oceanCount = randInRange(SMALL_OCEANS_MAX, SMALL_OCEANS_MIN);
                 oceanRatio = randInRange(SMALL_OCEANS_RATIO_MAX, SMALL_OCEANS_RATIO_MIN);
-                oceanRadiusGen = { SMALL_OCEANS_RADIUS_MAX, SMALL_OCEANS_RADIUS_MIN };
+                oceanRadiusGen[0] = SMALL_OCEANS_RADIUS_MAX;
+                oceanRadiusGen[1] = SMALL_OCEANS_RADIUS_MIN;
                 break;
             case MEDIUM:
                 oceanCount = randInRange(MEDIUM_OCEANS_MAX, MEDIUM_OCEANS_MIN);
                 oceanRatio = randInRange(MEDIUM_OCEANS_RATIO_MAX, MEDIUM_OCEANS_RATIO_MIN);
-                oceanRadiusGen = { MEDIUM_OCEANS_RADIUS_MAX, MEDIUM_OCEANS_RADIUS_MIN };
+                oceanRadiusGen[0] = MEDIUM_OCEANS_RADIUS_MAX;
+                oceanRadiusGen[1] = MEDIUM_OCEANS_RADIUS_MIN;
                 break;
             case LARGE:
                 oceanCount = randInRange(LARGE_OCEANS_MAX, LARGE_OCEANS_MIN);
                 oceanRatio = randInRange(LARGE_OCEANS_RATIO_MAX, LARGE_OCEANS_RATIO_MIN);
-                oceanRadiusGen = { LARGE_OCEANS_RADIUS_MAX, LARGE_OCEANS_RADIUS_MIN };
+                oceanRadiusGen[0] = LARGE_OCEANS_RADIUS_MAX;
+                oceanRadiusGen[1] = LARGE_OCEANS_RADIUS_MIN;
                 break;
             case SUPER_LARGE:
                 oceanCount = randInRange(SUPER_LARGE_OCEANS_MAX, SUPER_LARGE_OCEANS_MIN);
                 oceanRatio = randInRange(SUPER_LARGE_OCEANS_RATIO_MAX, SUPER_LARGE_OCEANS_RATIO_MIN);
-                oceanRadiusGen = { SUPER_LARGE_OCEANS_RADIUS_MAX, SUPER_LARGE_OCEANS_RADIUS_MIN };
+                oceanRadiusGen[0] = SUPER_LARGE_OCEANS_RADIUS_MAX;
+                oceanRadiusGen[1] = SUPER_LARGE_OCEANS_RADIUS_MIN;
                 break;
             default:
                 std::stringstream err;
@@ -105,13 +112,13 @@ class Grid
         std::vector<std::thread> threads;
         for(int i = 0; i < oceanCount; i++)
         {
-            threads.push_back(std::thread(thrOceans, oceanGrid, oceanRatio, oceanRadiusGen, mtx));
+            threads.push_back(std::thread(&thrOceans, oceanGrid, oceanRatio, oceanRadiusGen, mtx));
         }
         for(int i = 0; i < oceanCount; i++)
         {
             threads.at(i).join();
         }
-        threads.erase(0, oceanCount);
+        threads.clear();
         int seed = randInRange(randInRange(SUPER_LARGE_OCEANS_MAX));
         double **landGrid = (double**)malloc(sizeof(double*) * ySize);
         for(int i = 0; i < xSize; i++)
@@ -122,7 +129,7 @@ class Grid
         {
             for(int j = 0; j < xSize/GRID_PROCESSING_CHUNK_SIZE; j++)
             {
-                threads.push_back(thrNoise, landGrid, GRID_PROCESSING_CHUNK_SIZE*j, GRID_PROCESSING_CHUNK_SIZE*i, seed, mtx);
+                threads.push_back(std::thread(&thrNoise, landGrid, GRID_PROCESSING_CHUNK_SIZE*j, GRID_PROCESSING_CHUNK_SIZE*i, seed, mtx));
             }
         }
         for(int i = 0; i < ySize/GRID_PROCESSING_CHUNK_SIZE; i++)
@@ -219,6 +226,8 @@ struct gridSquare
     uint8_t facilities;
     // Population of the square
     unsigned int population;
+    // Tile height, used to generate some things.
+    double height;
     gridSquare()
     {
         owner = NULL;
@@ -226,6 +235,7 @@ struct gridSquare
         unit = NULL;
         facilities = NULL;
         population = NULL;
+        height = NULL;
     }
 };
 
