@@ -111,6 +111,35 @@ class Grid
         {
             threads.at(i).join();
         }
+        threads.erase(0, oceanCount);
+        int seed = randInRange(randInRange(SUPER_LARGE_OCEANS_MAX));
+        double **landGrid = (double**)malloc(sizeof(double*) * ySize);
+        for(int i = 0; i < xSize; i++)
+        {
+            landGrid[i] = (double*)malloc(sizeof(double) * xSize);
+        }
+        for(int i = 0; i < ySize/GRID_PROCESSING_CHUNK_SIZE; i++)
+        {
+            for(int j = 0; j < xSize/GRID_PROCESSING_CHUNK_SIZE; j++)
+            {
+                threads.push_back(thrNoise, landGrid, GRID_PROCESSING_CHUNK_SIZE*j, GRID_PROCESSING_CHUNK_SIZE*i, seed, mtx);
+            }
+        }
+        for(int i = 0; i < ySize/GRID_PROCESSING_CHUNK_SIZE; i++)
+        {
+            for(int j = 0; j < xSize/GRID_PROCESSING_CHUNK_SIZE; j++)
+            {
+                threads.front().join();
+            }
+        }
+        for(int i = 0; i < ySize; i++)
+        {
+            for(int j = 0; j < xSize; j++)
+            {
+                landGrid[i][j] -= oceanGrid[i][j];
+                squares[i][j].height = landGrid[i][j];
+            }
+        }
     }
     // Multithreading function to generate the oceans.
     void thrOceans(double **oceanGrid, int oceanRatio, int oceanRadiusGen[2], std::mutex mtx)
@@ -139,18 +168,38 @@ class Grid
                     int2 tmp;
                     tmp.x = j;
                     tmp.y = k;
-                    if(inCircle(tmp, pos, radius - 1))
+                    if(inCircle(tmp, pos, radius - 3))
                     {
                         oceanGrid[k][j] = 1;
                     }
-                    else if(inCircle(tmp, pos, radius))
+                    else if(inCircle(tmp, pos, radius - 1))
                     {
                         oceanGrid[k][j] = .7;
+                    }
+                    else if(inCircle(tmp, pos, radius))
+                    {
+                        oceanGrid[k][j] = .5;
                     }
                 }
             }
             origin = pos;
         }
+    }
+    // Multithreading function to create the land
+    void thrNoise(double **landGrid, int xOffset, int yOffset, int seed, std::mutex mtx)
+    {
+        std::lock_guard<std::mutex> lock (mtx);
+        for(int i = yOffset; i < GRID_PROCESSING_CHUNK_SIZE + yOffset; i++)
+        {
+            for(int j = xOffset; j < GRID_PROCESSING_CHUNK_SIZE + xOffset; j++)
+            {
+                landGrid[i][j] = (double)warpedNoise((float)j, (float)i, PERLIN_NOISE_FREQUENCY, PERLIN_NOISE_DEPTH, seed);
+            }
+        }
+    }
+    float warpedNoise(float x, float y, float freq, int depth, int seed)
+    {
+        return perlin2d(x * perlin2d(x, y, freq, depth, seed), y * perlin2d(x, y, freq, depth, seed), freq * perlin2d(x, y, freq, depth, seed), (int)((float)depth * perlin2d(x, y, freq, depth, seed)), (int)((float)seed * perlin2d(x, y, freq, depth, seed)));
     }
 };
 
