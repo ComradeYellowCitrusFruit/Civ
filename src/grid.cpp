@@ -14,7 +14,7 @@ class Grid
     // Y size
     int ySize;
     // Actual squares, initalized to a 2d array of varying size
-    gridSquare *squares;
+    gridSquare **squares;
     // Don't use this constructor, don't. I just made this to get vscode to shut the fuck up
     Grid()
     {
@@ -25,12 +25,13 @@ class Grid
     {
         xSize = size;
         ySize = size;
-        squares = new gridSquare[size][size];
+        squares = (gridSquare**)malloc(sizeof(gridSquare*) * size);
         for(int i = 0; i < size; i++)
         {
+            squares[i] = (gridSquare*)malloc(sizeof(gridSquare) * size);
             for(int j = 0; j < size; j++)
             {
-                *squares[i][j] = gridSquare();
+                squares[i][j] = gridSquare();
             }
         }
         generateWorld();

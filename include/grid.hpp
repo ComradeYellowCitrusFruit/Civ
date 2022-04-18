@@ -28,7 +28,7 @@ class Grid
     // Y size
     int ySize;
     // Actual squares, initalized to a 2d array of varying size
-    gridSquare *squares;
+    gridSquare **squares;
     // Don't use this constructor, don't. I just made this to get vscode to shut the fuck up
     Grid();
     // Actual constructor
@@ -65,7 +65,7 @@ class renderedGrid
 {
     public:
     // Actual content of the grid, initialized to 2d array of varying size
-    char *gridContent;
+    char **gridContent;
 };
 
 class viewGrid 
@@ -75,7 +75,7 @@ class viewGrid
     *   The view grid is 80x80, however the array is 80x81 to account for the null character
     *   Initialize each pointer to a char array with 81 length
     */
-    char *gridContent;
+    char **gridContent;
     void generate(int xOffset, int yOffset, renderedGrid grid);
 };
 
