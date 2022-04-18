@@ -1,5 +1,6 @@
 #include <cstdint>
 #include "grid.hpp"
+#include "perlin.hpp"
 #include "random.hpp"
 
 /*  The grid for handling the map
@@ -42,7 +43,56 @@ class Grid
     // Generates the world
     void generateWorld()
     {
-        
+        int **oceanGrid = (int**)malloc(sizeof(int*) * ySize);
+        for(int i = 0; i < ySize; i++)
+        {
+            oceanGrid[i] = (int*)malloc(sizeof(int) * xSize);
+        }
+        int yOceanLimit = randInRange(ySize/20);
+        for(int i = 0; i < ySize; i++)
+        {
+            for(int j = 0; j < xSize; j++)
+            {
+                if(i > yOceanLimit && i < ySize - yOceanLimit - 1)
+                {
+                    if(j < 1 || j > ySize - 2)
+                    {
+                        oceanGrid[i][j] = 1;
+                    }
+                }
+            }
+        }
+        int oceanCount;
+        int oceanRatio;
+        int oceanRadiusGen[2];
+        switch(xSize)
+        {
+            case SUPER_SMALL:
+                oceanCount = randInRange(SUPER_SMALL_OCEANS_MAX, SUPER_SMALL_OCEANS_MIN);
+                oceanRatio = randInRange(SUPER_SMALL_OCEANS_RATIO_MAX, SUPER_SMALL_OCEANS_RATIO_MIN);
+                oceanRadiusGen = { SUPER_SMALL_OCEANS_RADIUS_MAX, SUPER_SMALL_OCEANS_RADIUS_MIN };
+                break;
+            case SMALL:
+                oceanCount = randInRange(SMALL_OCEANS_MAX, SMALL_OCEANS_MIN);
+                oceanRatio = randInRange(SMALL_OCEANS_RATIO_MAX, SMALL_OCEANS_RATIO_MIN);
+                oceanRadiusGen = { SMALL_OCEANS_RADIUS_MAX, SMALL_OCEANS_RADIUS_MIN };
+                break;
+            case MEDIUM:
+                oceanCount = randInRange(MEDIUM_OCEANS_MAX, MEDIUM_OCEANS_MIN);
+                oceanRatio = randInRange(MEDIUM_OCEANS_RATIO_MAX, MEDIUM_OCEANS_RATIO_MIN);
+                oceanRadiusGen = { MEDIUM_OCEANS_RADIUS_MAX, MEDIUM_OCEANS_RADIUS_MIN };
+                break;
+            case LARGE:
+                oceanCount = randInRange(LARGE_OCEANS_MAX, LARGE_OCEANS_MIN);
+                oceanRatio = randInRange(LARGE_OCEANS_RATIO_MAX, LARGE_OCEANS_RATIO_MIN);
+                oceanRadiusGen = { LARGE_OCEANS_RADIUS_MAX, LARGE_OCEANS_RADIUS_MIN };
+                break;
+            case SUPER_LARGE:
+                oceanCount = randInRange(SUPER_LARGE_OCEANS_MAX, SUPER_LARGE_OCEANS_MIN);
+                oceanRatio = randInRange(SUPER_LARGE_OCEANS_RATIO_MAX, SUPER_LARGE_OCEANS_RATIO_MIN);
+                oceanRadiusGen = { SUPER_LARGE_OCEANS_RADIUS_MAX, SUPER_LARGE_OCEANS_RADIUS_MIN };
+                break;
+        }
     }
 };
 
