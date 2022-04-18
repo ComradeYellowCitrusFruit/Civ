@@ -87,6 +87,8 @@ struct gridSquare
     uint8_t facilities;
     // Population of the square
     unsigned int population;
+    // Tile height, used to generate some things.
+    double height.
 };
 
 /*  Rendered form of the grid, the COMPLETE GRID
