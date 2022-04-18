@@ -71,42 +71,48 @@ class Grid
         int oceanCount;
         int oceanRatio;
         int oceanRadiusGen[2];
+        int countries;
         switch(xSize)
         {
             case SUPER_SMALL:
                 oceanCount = randInRange(SUPER_SMALL_OCEANS_MAX, SUPER_SMALL_OCEANS_MIN);
                 oceanRatio = randInRange(SUPER_SMALL_OCEANS_RATIO_MAX, SUPER_SMALL_OCEANS_RATIO_MIN);
+                countries = randInRange(SUPER_SMALL_COUNTRIES_MIN, SUPER_SMALL_COUNTRIES_MAX);
                 oceanRadiusGen[0] = SUPER_SMALL_OCEANS_RADIUS_MAX;
                 oceanRadiusGen[1] = SUPER_SMALL_OCEANS_RADIUS_MIN;
                 break;
             case SMALL:
                 oceanCount = randInRange(SMALL_OCEANS_MAX, SMALL_OCEANS_MIN);
                 oceanRatio = randInRange(SMALL_OCEANS_RATIO_MAX, SMALL_OCEANS_RATIO_MIN);
+                countries = randInRange(SMALL_COUNTRIES_MIN, SMALL_COUNTRIES_MAX);
                 oceanRadiusGen[0] = SMALL_OCEANS_RADIUS_MAX;
                 oceanRadiusGen[1] = SMALL_OCEANS_RADIUS_MIN;
                 break;
             case MEDIUM:
                 oceanCount = randInRange(MEDIUM_OCEANS_MAX, MEDIUM_OCEANS_MIN);
                 oceanRatio = randInRange(MEDIUM_OCEANS_RATIO_MAX, MEDIUM_OCEANS_RATIO_MIN);
+                countries = randInRange(MEDIUM_COUNTRIES_MIN, MEDIUM_COUNTRIES_MAX);
                 oceanRadiusGen[0] = MEDIUM_OCEANS_RADIUS_MAX;
                 oceanRadiusGen[1] = MEDIUM_OCEANS_RADIUS_MIN;
                 break;
             case LARGE:
                 oceanCount = randInRange(LARGE_OCEANS_MAX, LARGE_OCEANS_MIN);
                 oceanRatio = randInRange(LARGE_OCEANS_RATIO_MAX, LARGE_OCEANS_RATIO_MIN);
+                countries = randInRange(LARGE_COUNTRIES_MIN, LARGE_COUNTRIES_MAX);
                 oceanRadiusGen[0] = LARGE_OCEANS_RADIUS_MAX;
                 oceanRadiusGen[1] = LARGE_OCEANS_RADIUS_MIN;
                 break;
             case SUPER_LARGE:
                 oceanCount = randInRange(SUPER_LARGE_OCEANS_MAX, SUPER_LARGE_OCEANS_MIN);
                 oceanRatio = randInRange(SUPER_LARGE_OCEANS_RATIO_MAX, SUPER_LARGE_OCEANS_RATIO_MIN);
+                countries = randInRange(SUPER_LARGE_COUNTRIES_MIN, SUPER_LARGE_COUNTRIES_MAX);
                 oceanRadiusGen[0] = SUPER_LARGE_OCEANS_RADIUS_MAX;
                 oceanRadiusGen[1] = SUPER_LARGE_OCEANS_RADIUS_MIN;
                 break;
             default:
                 std::stringstream err;
                 err << "Invaild world size! World size should be one of the valid sizes defined in grid.hpp, not " << xSize << "!";
-                throw err.str();
+                throw err.str().c_str();
         }
         std::mutex mtx;
         std::vector<std::thread> threads;
