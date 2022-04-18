@@ -1,5 +1,9 @@
 #include <cstdint>
+#include <thread>
+#include <mutex>
+#include <sstream>
 #include "grid.hpp"
+#include "civ_typedefs.hpp"
 #include "perlin.hpp"
 #include "random.hpp"
 
@@ -43,10 +47,10 @@ class Grid
     // Generates the world
     void generateWorld()
     {
-        int **oceanGrid = (int**)malloc(sizeof(int*) * ySize);
+        double **oceanGrid = (double**)malloc(sizeof(double*) * ySize);
         for(int i = 0; i < ySize; i++)
         {
-            oceanGrid[i] = (int*)malloc(sizeof(int) * xSize);
+            oceanGrid[i] = (double*)malloc(sizeof(double) * xSize);
         }
         int yOceanLimit = randInRange(ySize/20);
         for(int i = 0; i < ySize; i++)
@@ -92,6 +96,60 @@ class Grid
                 oceanRatio = randInRange(SUPER_LARGE_OCEANS_RATIO_MAX, SUPER_LARGE_OCEANS_RATIO_MIN);
                 oceanRadiusGen = { SUPER_LARGE_OCEANS_RADIUS_MAX, SUPER_LARGE_OCEANS_RADIUS_MIN };
                 break;
+            default:
+                std::stringstream err;
+                err << "Invaild world size! World size should be one of the valid sizes defined in grid.hpp, not " << xSize << "!";
+                throw err.str();
+        }
+        std::mutex mtx;
+        std::vector<std::thread> threads;
+        for(int i = 0; i < oceanCount; i++)
+        {
+            threads.push_back(std::thread(thrOceans, oceanGrid, oceanRatio, oceanRadiusGen, mtx));
+        }
+        for(int i = 0; i < oceanCount; i++)
+        {
+            threads.at(i).join();
+        }
+    }
+    // Multithreading function to generate the oceans.
+    void thrOceans(double **oceanGrid, int oceanRatio, int oceanRadiusGen[2], std::mutex mtx)
+    {
+        std::lock_guard<std::mutex> lock (mtx);
+        int2 center;
+        center.x = randInRange(xSize - 1);
+        center.y = randInRange(ySize - 1);
+        int2 origin = center;
+        for(int i = 0; i < oceanRatio; i++)
+        {
+            int2 pos;
+            pos.x = randInRange(xSize - 1);
+            pos.y = randInRange(ySize - 1);
+            while(!inCircle(pos, origin, oceanRadiusGen[0] * 1 + sin((double)i)))
+            {
+                pos.x = randInRange(xSize - 1);
+                pos.y = randInRange(ySize - 1);
+            }
+            int radius = randInRange(oceanRadiusGen[0], oceanRadiusGen[1]);
+            oceanGrid[pos.y][pos.x] = 1;
+            for(int j = 0; j < radius; j++)
+            {
+                for(int k = 0; k < radius; k++)
+                {
+                    int2 tmp;
+                    tmp.x = j;
+                    tmp.y = k;
+                    if(inCircle(tmp, pos, radius - 1))
+                    {
+                        oceanGrid[k][j] = 1;
+                    }
+                    else if(inCircle(tmp, pos, radius))
+                    {
+                        oceanGrid[k][j] = .7;
+                    }
+                }
+            }
+            origin = pos;
         }
     }
 };
