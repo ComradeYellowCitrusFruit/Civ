@@ -2,6 +2,7 @@
 #define CIVILIZATION_GRID_HPP
 
 #include <cstdint>
+#include <mutex>
 
 #define VIEWGRID_SIZE 80
 
@@ -47,6 +48,18 @@
 #define SUPER_LARGE_OCEANS_RADIUS_MIN 0x21
 #define SUPER_LARGE_OCEANS_RADIUS_MAX 0x44
 
+#ifndef GRID_PROCESSING_CHUNK_SIZE
+#define GRID_PROCESSING_CHUNK_SIZE 0x50
+#endif
+
+#ifndef PERLIN_NOISE_FREQUENCY
+#define PERLIN_NOISE_FREQUENCY 0x10
+#endif
+
+#ifndef PERLIN_NOISE_DEPTH
+#define PERLIN_NOISE_DEPTH 0x12
+#endif
+
 /*  The grid for handling the map
 *   It contains functions for rendering and modifying the grid/map
 *   There should be only one grid per world
@@ -69,6 +82,11 @@ class Grid
     private:
     // Generates the world
     void generateWorld();
+    // Multithreading function to generate the oceans.
+    void thrOceans(double **oceanGrid, int oceanRatio, int oceanRadiusGen[2], std::mutex mtx);
+    // Multithreading function to create the land
+    void thrNoise(double **landGrid, int xOffset, int yOffset, int seed, std::mutex mtx);
+    float warpedNoise(float x, float y, float freq, int depth, int seed);
 };
 
 /*  Since grid squares contain large amounts of data, a struct is best to represent each square
