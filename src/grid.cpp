@@ -4,7 +4,10 @@
 #include <sstream>
 #include <vector>
 #include "grid.hpp"
+#include "gamestate.hpp"
 #include "civ_typedefs.hpp"
+#include "countries.hpp"
+#include "units.hpp"
 #include "checks.hpp"
 #include "perlin.hpp"
 #include "random.hpp"
@@ -174,6 +177,10 @@ class Grid
                 biomes[i][j].y = randInRange(northLimit, southLimit);
                 biomes[i][j].x = randInRange(xSize);
                 while(squares[biomes[i][j].y][biomes[i][j].x].height <= 3)
+                {
+                    biomes[i][j].y = randInRange(northLimit, southLimit);
+                    biomes[i][j].x = randInRange(xSize);
+                }
             }
         }
         threads.clear();
@@ -181,6 +188,91 @@ class Grid
         for(int i = 0; i < 7; i++)
         {
             threads.push_back(std::thread(&thrTerrain, biomes[i], northLimit, southLimit, oceanRadiusGen[1]/2, oceanRadiusGen[0]/2, biomeTypes[i], mtx));
+        }
+        for(int i = 0; i < 7; i++)
+        {
+            threads.at(i).join();
+        }
+        threads.clear();
+        bool firstRun = true;
+        for(int i = 0; i <= countries; i++)
+        {
+            int2 pos;
+            pos.x = randInRange(xSize);
+            pos.y = randInRange(northLimit, southLimit);
+            while(!squares[pos.y][pos.x].validLocation())
+            {
+                pos.x = randInRange(xSize);
+                pos.y = randInRange(northLimit, southLimit);
+            }
+            country Country;
+            switch(firstRun)
+            {
+                case true:
+                    firstRun = false;
+                    Country.id = PLAYER_RESERVED_ID;
+                    break;
+                case false:
+                    Country.id = COUNTY_ID_START_POINT + (i - 1);
+                    break;
+            }
+            unit settler;
+            settler = Settler;
+            settler.owner = Country.id;
+            settler.setID(idTracker + 1);
+            idTracker++;
+            settler.position = pos;
+            settler.canMove = true;
+            Main.units.push_back(settler);
+            unit warrior;
+            warrior = Warrior;
+            warrior.owner = Country.id;
+            warrior.setID(idTracker + 1);
+            idTracker++;
+            bool validPos = false;
+            int2 Pos = pos;
+            while(!validPos)
+            {
+                if(squares[pos.y + 1][pos.x].validLocation())
+                {
+                    Pos.y++;
+                }
+                else if(squares[pos.y][pos.x + 1].validLocation())
+                {
+                    Pos.x++;
+                }
+                else if(squares[pos.y + 1][pos.x + 1].validLocation())
+                {
+                    Pos.y++;
+                    Pos.x++;
+                }
+                else if(squares[pos.y - 1][pos.x].validLocation())
+                {
+                    Pos.y--;
+                }
+                else if(squares[pos.y][pos.x - 1].validLocation())
+                {
+                    Pos.x--;
+                }
+                else if(squares[pos.y - 1][pos.x - 1].validLocation())
+                {
+                    Pos.y--;
+                    Pos.x--;
+                }
+                else if(squares[pos.y + 1][pos.x - 1].validLocation())
+                {
+                    Pos.y++;
+                    Pos.x--;
+                }
+                else if(squares[pos.y - 1][pos.x + 1].validLocation())
+                {
+                    Pos.y--;
+                    Pos.x++;
+                }
+            }
+            warrior.canMove = true;
+            Main.units.push_back(warrior);
+            Main.countries.push_back(Country);
         }
     }
     // Multithreading function to generate the oceans.
@@ -334,6 +426,24 @@ struct gridSquare
         facilities = NULL;
         population = NULL;
         height = NULL;
+    }
+    bool validLocation()
+    {
+        if(height <= 3)
+        {
+            return false;
+        }
+        switch(terrain & terrain::ice & terrain::mountain)
+        {
+            case terrain::ice:
+                return false;
+            case terrain::mountain:
+                return false;
+            case terrain::ice | terrain::mountain:
+                return false;
+            case (uint8_t)0x0:
+                return true;
+        }
     }
 };
 
