@@ -106,17 +106,18 @@ struct gridSquare
 {
     public:
     // Owner ID
-    uint8_t owner;
+    int owner;
     // Terrain type
     uint8_t terrain;
     // Temporary until unit class gets added
     uint8_t unit;
     // Facilities of the grid square
-    uint8_t facilities;
+    uint32_t facilities;
     // Population of the square
     unsigned int population;
     // Tile height, used to generate some things.
     double height;
+    gridSquare();
 };
 
 /*  Rendered form of the grid, the COMPLETE GRID
@@ -138,6 +139,18 @@ class viewGrid
     */
     char **gridContent;
     void generate(int xOffset, int yOffset, renderedGrid grid);
+};
+
+enum terrain
+{
+    ice = 1 << 7,
+    tundra = 1 << 6,
+    mountain = 1 << 5,
+    desert = 1 << 4,
+    swamp = 1 << 3,
+    forest = 1 << 2,
+    hills = 1 << 1,
+    plains = 1 << 0
 };
 
 #endif
