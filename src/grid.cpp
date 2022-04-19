@@ -150,8 +150,37 @@ class Grid
             for(int j = 0; j < xSize; j++)
             {
                 landGrid[i][j] -= oceanGrid[i][j];
-                squares[i][j].height = landGrid[i][j];
+                squares[i][j].height = landGrid[i][j] * (fabs((double)perlin2d((float)j, (float)i, randInRange(120), randInRange(120), seed))*10);
             }
+        }
+        for(int i = 0; i < ySize; i++)
+        {
+            free(oceanGrid[i]);
+            free(landGrid[i]);
+        }
+        free(oceanGrid);
+        free(landGrid);
+        int2 **biomes = (int2**)malloc(sizeof(int2*) * 7);
+        for(int i = 0; i < 8; i++)
+        {
+            biomes[i] = (int2*)malloc(sizeof(int2) * randInRange(24, 2));
+        }
+        int southLimit = ySize/randInRange(24,4);
+        int northLimit = ySize - (ySize/randInRange(24,4));
+        for(int i = 0; i < 7; i++)
+        {
+            for(int j = 0; j < sizeof(biomes[i])/sizeof(int2); j++)
+            {
+                biomes[i][j].y = randInRange(northLimit, southLimit);
+                biomes[i][j].x = randInRange(xSize);
+                while(squares[biomes[i][j].y][biomes[i][j].x].height <= 3)
+            }
+        }
+        threads.clear();
+        uint8_t biomeTypes[7] = { terrain::plains, terrain::hills, terrain::forest, terrain::swamp, terrain::mountain, terrain::tundra }
+        for(int i = 0; i < 7; i++)
+        {
+            threads.push_back(std::thread(&thrTerrain, biomes[i], northLimit, southLimit, oceanRadiusGen[1]/2, oceanRadiusGen[0]/2, biomeTypes[i], mtx));
         }
     }
     // Multithreading function to generate the oceans.
@@ -197,6 +226,7 @@ class Grid
             }
             origin = pos;
         }
+        
     }
     // Multithreading function to create the land
     void thrNoise(double **landGrid, int xOffset, int yOffset, int seed, std::mutex mtx)
@@ -206,7 +236,69 @@ class Grid
         {
             for(int j = xOffset; j < GRID_PROCESSING_CHUNK_SIZE + xOffset; j++)
             {
-                landGrid[i][j] = (double)warpedNoise((float)j, (float)i, PERLIN_NOISE_FREQUENCY, PERLIN_NOISE_DEPTH, seed);
+                landGrid[i][j] = (double)warpedNoise((float)j, (float)i, PERLIN_NOISE_FREQUENCY, PERLIN_NOISE_DEPTH, seed) - ((double)warpedNoise((float)j, (float)i, randInRange(120), randInRange(120), seed) * .25);
+            }
+        }
+    }
+    // Multithreading function to process terrain
+    void thrTerrain(int2 *biomes, int northLimit, int southLimit, int rmin, int rmax, uint8_t flag, std::mutex mtx)
+    {
+        for(int i = 0; i < ySize; i++)
+        {
+            for(int j = 0; j < xSize; j++)
+            {
+                if(i > northLimit || i < southLimit)
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    if(squares[i][j].height >= 3 && squares[i][j].terrain & terrain::ice != terrain::ice)
+                    {
+                        if(squares[i][j].height == 3 || squares[i][j].height <= 4)
+                        {
+                            squares[i][j].height == randDoubleInRange(6, 4);
+                        }
+                        squares[i][j].terrain |= terrain::ice;
+                    }
+                }
+                else
+                {
+                    for(int k = 0; k < 8; k++)
+                    {
+                        std::lock_guard<std::mutex> lock(mtx);
+                        if(searchPoints(biomes[k], i, j, 8))
+                        {
+                            int radius = randInRange(rmax, rmin);
+                            for(int y = 0; y < ySize; y++)
+                            {
+                                for(int x = 0; x < xSize; x++)
+                                {
+                                    int2 point;
+                                    point.x = x;
+                                    point.y = y;
+                                    if(inCircle(point, searchPoints(biomes[k], i, j), radius))
+                                    {
+                                        squares[y][x].terrain |= flag;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    int2 searchPoints(int2 *points, int x, int y)
+    {
+        int2 target;
+        target.x = x;
+        target.y = y;
+        for(int i = 0; i < sizeof(points[i])/sizeof(int2); i++)
+        {
+            switch(points[i])
+            {
+                case target:
+                    return points[i];
+                default:
+                    break;
             }
         }
     }
@@ -223,13 +315,13 @@ struct gridSquare
 {
     public:
     // Owner ID
-    uint8_t owner;
+    int owner;
     // Terrain type
     uint8_t terrain;
     // Temporary until unit class gets added
     uint8_t unit;
     // Facilities of the grid square
-    uint8_t facilities;
+    uint32_t facilities;
     // Population of the square
     unsigned int population;
     // Tile height, used to generate some things.
@@ -264,4 +356,16 @@ class viewGrid
     */
     char *gridContent;
     void generate(int xOffset, int yOffset, renderedGrid grid);
+};
+
+enum terrain
+{
+    ice = 1 << 7,
+    tundra = 1 << 6,
+    mountain = 1 << 5,
+    desert = 1 << 4,
+    swamp = 1 << 3,
+    forest = 1 << 2,
+    hills = 1 << 1,
+    plains = 1 << 0
 };
