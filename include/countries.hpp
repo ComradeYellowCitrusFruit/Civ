@@ -35,12 +35,13 @@ void barbarianMovement(int barbarianID);
 
 class country
 {
-    // County ID
-    int id;
-    // Units
-    std::vector<unit> Units;
-    // Gold
-    int gold;
+    public:
+       // County ID
+        int id;
+        // Units
+        std::vector<unit> Units;
+        // Gold
+        int gold;
 };
 
 #endif

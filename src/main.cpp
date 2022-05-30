@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <vector>
+#include <random>
 #include "gamestate.hpp"
 #include "grid.hpp"
 #include "units.hpp"

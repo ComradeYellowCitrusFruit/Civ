@@ -1,3 +1,10 @@
 {
-    "C_Cpp.vcFormat.space.pointerReferenceAlignment": "right"
+    "C_Cpp.vcFormat.space.pointerReferenceAlignment": "right",
+    "files.associations": {
+        "chrono": "cpp",
+        "iosfwd": "cpp",
+        "vector": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
+    }
 }

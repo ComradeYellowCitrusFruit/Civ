@@ -184,7 +184,7 @@ class Grid
             }
         }
         threads.clear();
-        uint8_t biomeTypes[7] = { terrain::plains, terrain::hills, terrain::forest, terrain::swamp, terrain::mountain, terrain::tundra }
+        uint8_t biomeTypes[7] = { terrain::plains, terrain::hills, terrain::forest, terrain::swamp, terrain::mountain, terrain::tundra };
         for(int i = 0; i < 7; i++)
         {
             threads.push_back(std::thread(&thrTerrain, biomes[i], northLimit, southLimit, oceanRadiusGen[1]/2, oceanRadiusGen[0]/2, biomeTypes[i], mtx));
@@ -356,7 +356,7 @@ class Grid
                     for(int k = 0; k < 8; k++)
                     {
                         std::lock_guard<std::mutex> lock(mtx);
-                        if(searchPoints(biomes[k], i, j, 8))
+                        if(searchPoints(&(biomes[k]), i, j, 8))
                         {
                             int radius = randInRange(rmax, rmin);
                             for(int y = 0; y < ySize; y++)
